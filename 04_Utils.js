@@ -10,10 +10,14 @@ Utils._headerCache = null;
 SHEET
 ----------------------------------------------------------*/
 
-Utils.sheet = () =>
-  SpreadsheetApp
-    .getActiveSpreadsheet()
-    .getSheetByName(CONFIG.SHEET_NAME);
+Utils.sheet = () => {
+
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+
+  return ss.getSheetByName(CONFIG.SHEET_NAME)
+      || ss.getActiveSheet();
+
+};
 
 /*----------------------------------------------------------
 TEXT

@@ -126,3 +126,104 @@ Utils.col = header => {
   );
 
 };
+
+/*----------------------------------------------------------
+SPREADSHEET
+----------------------------------------------------------*/
+
+Utils.ss = () => SpreadsheetApp.getActiveSpreadsheet();
+
+/*----------------------------------------------------------
+ACTIVE SHEET
+----------------------------------------------------------*/
+
+Utils.activeSheet = () => SpreadsheetApp.getActiveSheet();
+
+/*----------------------------------------------------------
+HEADERS
+----------------------------------------------------------*/
+
+Utils.headers = () => {
+
+  const sh = Utils.sheet();
+
+  return sh.getRange(
+    CONFIG.HEADER_ROW,
+    1,
+    1,
+    sh.getLastColumn()
+  ).getDisplayValues()[0];
+
+};
+
+/*----------------------------------------------------------
+NORMALIZE
+----------------------------------------------------------*/
+
+Utils.normalize = value => {
+
+  return String(value || "")
+    .replace(/^[^\p{L}\p{N}]+/gu, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toUpperCase();
+
+};
+
+/*----------------------------------------------------------
+FOOTER ROW
+----------------------------------------------------------*/
+
+Utils.footerRow = () => {
+
+  const sh = Utils.sheet();
+
+  const values = sh
+    .getRange(1,1,sh.getLastRow(),1)
+    .getDisplayValues()
+    .flat();
+
+  const row = values.findIndex(v => Utils.text(v) === "👉👉");
+
+  return row < 0 ? sh.getLastRow()+1 : row+1;
+
+};
+
+/*----------------------------------------------------------
+LAST DATA ROW
+----------------------------------------------------------*/
+
+Utils.lastDataRow = () => {
+
+  return Utils.footerRow() - 1;
+
+};
+
+/*----------------------------------------------------------
+REFRESH
+----------------------------------------------------------*/
+
+Utils.refresh = () => {
+
+  if (typeof Job.updateBorder === "function") {
+    Job.updateBorder();
+  }
+
+  if (typeof UI !== "undefined" &&
+      typeof UI.apply === "function") {
+    UI.apply();
+  }
+
+  SpreadsheetApp.flush();
+
+};
+
+/*----------------------------------------------------------
+CLEAR CACHE
+----------------------------------------------------------*/
+
+Utils.clearCache = () => {
+
+  Utils._headerCache = null;
+
+};

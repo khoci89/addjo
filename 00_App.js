@@ -6,19 +6,11 @@
  */
 
 const App = Object.freeze({
-
   NAME: "ASJ JOB SYSTEM",
-
-  VERSION: "2.0.0",
-
-  AUTHOR: "PT Amanah Sakura Japan"
-
+  VERSION: "3.0.0"
 });
 
 const Job = {};
-
 const Form = {};
-
 const UI = {};
-
 const Utils = {};

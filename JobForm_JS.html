@@ -1,0 +1,1154 @@
+<!-- ==========================================================
+ASJ JOB SYSTEM V3
+File : JobForm_JS.html
+PART 1 / 4
+=========================================================== -->
+
+<script>
+
+/*==========================================================
+GLOBAL
+==========================================================*/
+
+const APP = {
+
+    schema : [],
+
+    version : "",
+
+    title : ""
+
+};
+
+const DOM = {};
+
+/*==========================================================
+START
+==========================================================*/
+
+window.addEventListener(
+
+    "load",
+
+    initialize
+
+);
+
+/*==========================================================
+INITIALIZE
+==========================================================*/
+
+function initialize(){
+
+    cacheDom();
+
+    loading(true);
+
+    google.script.run
+
+        .withSuccessHandler(loadSuccess)
+
+        .withFailureHandler(showError)
+
+        .loadForm();
+
+}
+
+/*==========================================================
+CACHE DOM
+==========================================================*/
+
+function cacheDom(){
+
+    DOM.formArea =
+
+        document.getElementById("formArea");
+
+    DOM.loading =
+
+        document.getElementById("loading");
+
+    DOM.fieldCount =
+
+        document.getElementById("fieldCount");
+
+    DOM.version =
+
+        document.getElementById("version");
+
+}
+
+/*==========================================================
+LOAD SUCCESS
+==========================================================*/
+
+function loadSuccess(result){
+
+    APP.schema =
+
+        result.schema || [];
+
+    APP.title =
+
+        result.title || "Tambah Job";
+
+    APP.version =
+
+        result.version || "";
+
+    document.title =
+
+        APP.title;
+
+    if(DOM.version){
+
+        DOM.version.textContent =
+
+            APP.version;
+
+    }
+
+    if(DOM.fieldCount){
+
+        DOM.fieldCount.textContent =
+
+            APP.schema.length;
+
+    }
+
+    renderForm();
+
+    loading(false);
+
+}
+
+/*==========================================================
+RENDER FORM
+==========================================================*/
+
+function renderForm(){
+
+    DOM.formArea.innerHTML = "";
+
+    APP.schema.forEach(field=>{
+
+        DOM.formArea.appendChild(
+
+            createRow(field)
+
+        );
+
+    });
+
+}
+
+/*==========================================================
+ROW
+==========================================================*/
+
+function createRow(field){
+
+    const row =
+
+        document.createElement("div");
+
+    row.className =
+
+        "row";
+
+    const label =
+
+        document.createElement("label");
+
+    label.htmlFor =
+
+        field.id;
+
+    label.innerHTML =
+
+        field.label +
+
+        (
+
+            field.required
+
+            ? " <span class='required'>*</span>"
+
+            : ""
+
+        );
+
+    row.appendChild(label);
+
+    row.appendChild(
+
+        createField(field)
+
+    );
+
+    return row;
+
+}
+
+/*==========================================================
+FIELD BUILDER
+==========================================================*/
+
+function createField(field){
+
+    switch(field.type){
+
+        case "textarea":
+
+            return createTextarea(field);
+
+        case "choice":
+
+            return field.multiple
+
+                ? createMultiSelect(field)
+
+                : createSearchSelect(field);
+
+        default:
+
+            return createInput(field);
+
+    }
+
+}
+
+/*==========================================================
+FIELD ENGINE
+PART 2 / 4
+==========================================================*/
+
+/*----------------------------------------------------------
+TEXT INPUT
+----------------------------------------------------------*/
+
+function createInput(field){
+
+    const input =
+        document.createElement("input");
+
+    input.type = "text";
+
+    input.id = field.id;
+
+    input.name = field.id;
+
+    input.placeholder =
+
+        field.label;
+
+    input.value =
+
+        field.default || "";
+
+    if(field.required){
+
+        input.required = true;
+
+    }
+
+    return input;
+
+}
+
+/*----------------------------------------------------------
+TEXTAREA
+----------------------------------------------------------*/
+
+function createTextarea(field){
+
+    const textarea =
+        document.createElement("textarea");
+
+    textarea.id = field.id;
+
+    textarea.name = field.id;
+
+    textarea.placeholder =
+
+        field.label;
+
+    textarea.value =
+
+        field.default || "";
+
+    if(field.required){
+
+        textarea.required = true;
+
+    }
+
+    return textarea;
+
+}
+
+/*----------------------------------------------------------
+SEARCHABLE SELECT
+----------------------------------------------------------*/
+
+function createSearchSelect(field){
+
+    const wrap =
+        document.createElement("div");
+
+    wrap.className =
+        "search-select";
+
+    const input =
+        createInput(field);
+
+    input.placeholder = "Pilih...";
+
+    input.autocomplete = "off";
+
+    input.dataset.value =
+        field.default || "";
+
+    const list =
+        document.createElement("div");
+
+    list.className =
+        "search-list";
+
+    function render(keyword=""){
+
+        list.innerHTML = "";
+
+        const items =
+
+            (field.options || [])
+
+            .filter(item =>
+
+                item
+                .toLowerCase()
+                .includes(
+                    keyword.toLowerCase()
+                )
+
+            );
+
+        if(items.length===0){
+
+            const empty =
+                document.createElement("div");
+
+            empty.className =
+                "search-empty";
+
+            empty.textContent =
+                "Data tidak ditemukan";
+
+            list.appendChild(empty);
+
+            return;
+
+        }
+
+        items.forEach(item=>{
+
+            const option =
+                document.createElement("div");
+
+            option.className =
+                "search-item";
+
+            option.textContent =
+                item;
+
+            option.onclick = ()=>{
+
+                input.value =
+                    item;
+
+                input.dataset.value =
+                    item;
+
+                list.innerHTML = "";
+
+            };
+
+            list.appendChild(option);
+
+        });
+
+    }
+
+    input.onfocus = ()=>{
+
+        render();
+
+    };
+
+    input.oninput = ()=>{
+
+        input.dataset.value = "";
+
+        render(input.value);
+
+    };
+
+    document.addEventListener(
+
+        "click",
+
+        e=>{
+
+            if(!wrap.contains(e.target)){
+
+                list.innerHTML="";
+
+            }
+
+        }
+
+    );
+
+    wrap.appendChild(input);
+
+    wrap.appendChild(list);
+
+    return wrap;
+
+}
+
+/*----------------------------------------------------------
+MULTI SELECT
+----------------------------------------------------------*/
+
+function createMultiSelect(field){
+
+    const wrap =
+        document.createElement("div");
+
+    wrap.className =
+        "multi-select";
+
+    const search =
+        createInput(field);
+
+    search.placeholder =
+        "Cari...";
+
+    search.autocomplete =
+        "off";
+
+    const chipBox =
+        document.createElement("div");
+
+    chipBox.className =
+        "chip-container";
+
+    const list =
+        document.createElement("div");
+
+    list.className =
+        "multi-list";
+
+    const values =
+
+        Array.isArray(field.default)
+
+        ? [...field.default]
+
+        : [];
+
+    function render(keyword=""){
+
+        list.innerHTML="";
+
+        const items =
+
+            (field.options || [])
+
+            .filter(item=>
+
+                item
+                .toLowerCase()
+                .includes(
+                    keyword.toLowerCase()
+                )
+
+            );
+
+        items.forEach(item=>{
+
+            const row =
+                document.createElement("label");
+
+            row.className =
+                "check-item";
+
+            const check =
+                document.createElement("input");
+
+            check.type =
+                "checkbox";
+
+            check.checked =
+                values.includes(item);
+
+            check.onchange = ()=>{
+
+                if(check.checked){
+
+                    if(!values.includes(item)){
+
+                        values.push(item);
+
+                    }
+
+                }else{
+
+                    const index =
+                        values.indexOf(item);
+
+                    if(index>-1){
+
+                        values.splice(index,1);
+
+                    }
+
+                }
+
+                renderChip();
+
+            };
+
+            row.appendChild(check);
+
+            row.append(item);
+
+            list.appendChild(row);
+
+        });
+
+    }
+
+    function renderChip(){
+
+        chipBox.innerHTML="";
+
+        values.forEach(item=>{
+
+            const chip =
+                document.createElement("div");
+
+            chip.className =
+                "chip";
+
+            chip.innerHTML =
+                item +
+                " <span>&times;</span>";
+
+            chip.onclick = ()=>{
+
+                const index =
+                    values.indexOf(item);
+
+                if(index>-1){
+
+                    values.splice(index,1);
+
+                }
+
+                render(search.value);
+
+                renderChip();
+
+            };
+
+            chipBox.appendChild(chip);
+
+        });
+
+    }
+
+    search.onfocus = ()=>{
+
+        render();
+
+    };
+
+    search.oninput = ()=>{
+
+        render(search.value);
+
+    };
+
+    Object.defineProperty(
+
+        search,
+
+        "valueArray",
+
+        {
+
+            get(){
+
+                return values;
+
+            }
+
+        }
+
+    );
+
+    document.addEventListener(
+
+        "click",
+
+        e=>{
+
+            if(!wrap.contains(e.target)){
+
+                list.innerHTML="";
+
+            }
+
+        }
+
+    );
+
+    renderChip();
+
+    wrap.appendChild(search);
+
+    wrap.appendChild(chipBox);
+
+    wrap.appendChild(list);
+
+    return wrap;
+
+}
+
+/*==========================================================
+FORM ENGINE
+PART 3 / 4
+==========================================================*/
+
+/*----------------------------------------------------------
+FORM DATA
+----------------------------------------------------------*/
+
+function formData(){
+
+    const data = {};
+
+    APP.schema.forEach(field=>{
+
+        const el =
+            document.getElementById(field.id);
+
+        if(!el){
+
+            return;
+
+        }
+
+        switch(field.type){
+
+    case "choice":
+
+        if(field.multiple){
+
+            data[field.id]=
+                [...(el.valueArray||[])];
+
+        }else{
+
+            data[field.id]=
+                el.dataset.value ||
+                el.value ||
+                "";
+
+        }
+
+        break;
+
+    default:
+
+        data[field.id]=
+            (el.value||"").trim();
+
+}
+
+    });
+
+    return data;
+
+}
+
+/*----------------------------------------------------------
+VALIDATION
+----------------------------------------------------------*/
+
+function validateForm(){
+
+    for(const field of APP.schema){
+
+        if(!field.required) continue;
+
+        const el = document.getElementById(field.id);
+
+        if(!el) continue;
+
+        if(field.type==="choice"){
+
+            if(field.multiple){
+
+                const values = el.valueArray || [];
+
+                if(values.length===0){
+
+                    toast(field.label + " wajib diisi.");
+
+                    return false;
+
+                }
+
+            }else{
+
+                const value =
+
+                    (
+
+                        el.dataset.value ||
+
+                        el.value ||
+
+                        ""
+
+                    ).trim();
+
+                if(value===""){
+
+                    toast(field.label + " wajib diisi.");
+
+                    el.focus();
+
+                    return false;
+
+                }
+
+            }
+
+            continue;
+
+        }
+
+        if((el.value || "").trim()===""){
+
+            toast(field.label + " wajib diisi.");
+
+            el.focus();
+
+            return false;
+
+        }
+
+    }
+
+    return true;
+
+}
+
+/*----------------------------------------------------------
+SUBMIT
+----------------------------------------------------------*/
+
+function submitForm(){
+
+    if(!validateForm()){
+
+        return;
+
+    }
+
+    const button =
+
+        document.querySelector(
+
+            ".btn-primary"
+
+        );
+
+    if(button){
+
+        button.disabled = true;
+
+    }
+
+    loading(true);
+
+    google.script.run
+
+        .withSuccessHandler(
+
+            saveSuccess
+
+        )
+
+        .withFailureHandler(
+
+            saveFailed
+
+        )
+
+        .submitForm(
+
+            formData()
+
+        );
+
+}
+
+/*----------------------------------------------------------
+SAVE SUCCESS
+----------------------------------------------------------*/
+
+function saveSuccess(result){
+
+    loading(false);
+
+    const button =
+
+        document.querySelector(
+
+            ".btn-primary"
+
+        );
+
+    if(button){
+
+        button.disabled = false;
+
+    }
+
+    toast(
+
+        "✅ Job berhasil disimpan."
+
+    );
+
+    setTimeout(()=>{
+
+        google.script.host.close();
+
+    },500);
+
+}
+
+/*----------------------------------------------------------
+SAVE FAILED
+----------------------------------------------------------*/
+
+function saveFailed(error){
+
+    loading(false);
+
+    const button =
+
+        document.querySelector(
+
+            ".btn-primary"
+
+        );
+
+    if(button){
+
+        button.disabled = false;
+
+    }
+
+    showError(error);
+
+}
+
+/*----------------------------------------------------------
+LOADING
+----------------------------------------------------------*/
+
+function loading(show){
+
+    if(!DOM.loading){
+
+        return;
+
+    }
+
+    DOM.loading.classList.toggle(
+
+        "hidden",
+
+        !show
+
+    );
+
+}
+
+/*----------------------------------------------------------
+SHOW ERROR
+----------------------------------------------------------*/
+
+function showError(error){
+
+    const message =
+
+        error && error.message
+
+        ? error.message
+
+        : String(error);
+
+    toast(
+
+        "❌ " + message
+
+    );
+
+}
+
+/*==========================================================
+UTILITY
+PART 4 / 4
+==========================================================*/
+
+/*----------------------------------------------------------
+RESET
+----------------------------------------------------------*/
+
+function resetForm(){
+
+    APP.schema.forEach(field=>{
+
+        const el =
+            document.getElementById(field.id);
+
+        if(!el){
+
+            return;
+
+        }
+
+        
+switch(field.type){
+
+    case "choice":
+
+        if(field.multiple){
+
+            if(el.valueArray){
+
+                el.valueArray.length=0;
+
+            }
+
+            const chips=
+
+                el.parentElement
+                ?.querySelector(".chip-container");
+
+            if(chips){
+
+                chips.innerHTML="";
+
+            }
+
+        }else{
+
+            el.value="";
+
+            el.dataset.value="";
+
+        }
+
+        break;
+
+    default:
+
+        el.value="";
+
+}
+    });
+
+}
+
+/*----------------------------------------------------------
+AUTO FOCUS
+----------------------------------------------------------*/
+
+window.addEventListener(
+
+    "load",
+
+    ()=>{
+
+        setTimeout(()=>{
+
+            const first =
+
+                document.querySelector(
+
+                    "#formArea input,#formArea textarea"
+
+                );
+
+            if(first){
+
+                first.focus();
+
+            }
+
+        },300);
+
+    }
+
+);
+
+/*----------------------------------------------------------
+ENTER = NEXT
+----------------------------------------------------------*/
+
+document.addEventListener(
+
+    "keydown",
+
+    e=>{
+
+        if(e.key!=="Enter"){
+
+            return;
+
+        }
+
+        if(
+
+            e.target.tagName==="TEXTAREA"
+
+        ){
+
+            return;
+
+        }
+
+        e.preventDefault();
+
+        const fields =
+
+            [
+
+                ...document.querySelectorAll(
+
+                    "#formArea input,#formArea textarea"
+
+                )
+
+            ]
+
+            .filter(el=>!el.disabled);
+
+        const index =
+
+            fields.indexOf(e.target);
+
+        if(
+
+            index>=0 &&
+
+            index<fields.length-1
+
+        ){
+
+            fields[index+1].focus();
+
+        }
+
+    }
+
+);
+
+/*----------------------------------------------------------
+ESC = CLOSE
+----------------------------------------------------------*/
+
+document.addEventListener(
+
+    "keydown",
+
+    e=>{
+
+        if(
+
+            e.key==="Escape"
+
+        ){
+
+            google.script.host.close();
+
+        }
+
+    }
+
+);
+
+/*----------------------------------------------------------
+HELPER
+----------------------------------------------------------*/
+
+function byId(id){
+
+    return document.getElementById(id);
+
+}
+
+function toast(message){
+
+    alert(message);
+
+}
+
+function debug(){
+
+    console.log({
+
+        version :
+
+            APP.version,
+
+        title :
+
+            APP.title,
+
+        schema :
+
+            APP.schema,
+
+        data :
+
+            formData()
+
+    });
+
+}
+
+/*----------------------------------------------------------
+READY
+----------------------------------------------------------*/
+
+console.log(
+
+    "🌸 ASJ JOB SYSTEM V3 READY"
+
+);
+
+/*----------------------------------------------------------
+END
+----------------------------------------------------------*/
+
+</script>

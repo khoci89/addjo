@@ -1,0 +1,202 @@
+<!-- ==========================================================
+ASJ JOB SYSTEM V3
+File : JobForm.html
+=========================================================== -->
+
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+
+    <base target="_top">
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+    <title>ASJ Job System</title>
+
+    <?!= include("JobForm_CSS"); ?>
+
+</head>
+
+<body>
+
+<div class="app">
+
+    <section class="card compact">
+
+        <!-- ================= HEADER ================= -->
+
+        <header class="card-header">
+
+            <div class="header-left">
+
+                <div class="logo">
+
+                    🌸
+
+                </div>
+
+                <div>
+
+                    <h1>
+
+                        Tambah Job
+
+                    </h1>
+
+                    <p>
+
+                        PT Amanah Sakura Japan
+
+                    </p>
+
+                </div>
+
+            </div>
+
+            <div class="header-right">
+
+                <div class="badge">
+
+                    ASJ JOB SYSTEM
+
+                </div>
+
+                <div
+                    id="version"
+                    class="version">
+
+                    v3.0
+
+                </div>
+
+            </div>
+
+        </header>
+
+        <!-- ================= INFO ================= -->
+
+        <section class="info-bar">
+
+            <div>
+
+                📋
+                <span id="fieldCount">
+
+                    0
+
+                </span>
+                Field
+
+            </div>
+
+            <div>
+
+                ⚡ Dynamic Form
+
+            </div>
+
+        </section>
+
+        <!-- ================= FORM ================= -->
+
+        <main class="card-body">
+
+            <form
+                id="jobForm"
+                autocomplete="off"
+                onsubmit="return false;">
+
+                <div id="formArea">
+
+                </div>
+
+            </form>
+
+        </main>
+
+        <!-- ================= FOOTER ================= -->
+
+        <footer class="card-footer">
+
+            <button
+
+                type="button"
+
+                class="btn btn-secondary"
+
+                onclick="resetForm()">
+
+                🔄 Reset
+
+            </button>
+
+            <button
+
+                type="button"
+
+                class="btn btn-primary"
+
+                onclick="submitForm()">
+
+                💾 Simpan
+
+            </button>
+
+            <button
+
+                type="button"
+
+                class="btn btn-danger"
+
+                onclick="google.script.host.close()">
+
+                ✖ Tutup
+
+            </button>
+
+        </footer>
+
+    </section>
+
+</div>
+
+<!-- ================= LOADING ================= -->
+
+<div
+
+    id="loading"
+
+    class="loading hidden">
+
+    <div class="loading-card">
+
+        <div class="spinner">
+
+        </div>
+
+        <div class="loading-title">
+
+            Menyimpan Data
+
+        </div>
+
+        <div class="loading-subtitle">
+
+            Mohon tunggu sebentar...
+
+        </div>
+
+    </div>
+
+</div>
+
+<?!= include("JobForm_JS"); ?>
+
+</body>
+
+</html>
